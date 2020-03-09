@@ -3,6 +3,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "time.h"
+#include "tgmath.h"
 
 #include "ext_module.h"
 
@@ -56,11 +57,11 @@ int main()
 		mean /= nb_dat;
 		for(j = 0; j <  nb_dat; j++)
 			input[j][i] -= mean;
-		maxval = abs(input[0][i]);
+		maxval = fabsf(input[0][i]);
 		for(j = 0; j < nb_dat; j++)
 		{
 			if(abs(input[j][i] > maxval))
-				maxval = abs(input[j][i]);
+				maxval = fabsf(input[j][i]);
 		}
 		for(j = 0; j < nb_dat; j++)
 			input[j][i] /= maxval;

@@ -81,12 +81,12 @@ int main()
 		for(j = 0; j < nb_train; j++)
 		{
 			if(abs(input[j][i] > maxval))
-				maxval = abs(input[j][i]);
+				maxval = fabsf(input[j][i]);
 		}
 		for(j = 0; j < nb_test; j++)
 		{
 			if(abs(input_test[j][i] > maxval))
-				maxval = abs(input_test[j][i]);
+				maxval = fabsf(input_test[j][i]);
 		}
 		for(j = 0; j < nb_train; j++)
 			input[j][i] /= maxval;
