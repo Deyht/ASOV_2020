@@ -1,2 +1,2 @@
 # ASOV_2020
-ASOV Semi Hackathon 2020 material for ANN tutorial
+ASOV Semi Hackathon 2020 materials for ANN tutorial
