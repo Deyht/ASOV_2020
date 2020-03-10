@@ -27,15 +27,13 @@ def forward(input_vect, hidden_vect, output_vect, weights1, weights2, beta):
 	out_dim = np.shape(output_vect)[0]
 	
 	for i in range(0,hid_dim-1):
-		h = sum(weights1[:,i]*input_vect[:])
+		h = np.sum(weights1[:,i]*input_vect[:])
 		hidden_vect[i] = 1.0/(1.0 + np.exp(-beta*h))
 	hidden_vect[hid_dim-1] = -1.0
 		
 	for i in range(0,out_dim):
-		h = sum(weights2[:,i]*hidden_vect[:])
+		h = np.sum(weights2[:,i]*hidden_vect[:])
 		output_vect[i] = 1.0/(1.0 + np.exp(-beta*h))
-	
-	
 	
 	
 def backprop(input_vect, hidden_vect, output_vect, targ_vect, weights1, weights2, learn_rate, beta):
@@ -51,7 +49,7 @@ def backprop(input_vect, hidden_vect, output_vect, targ_vect, weights1, weights2
 	delta_h = np.zeros(hid_dim-1)
 	
 	for i in range(hid_dim-1):
-		h = sum(weights2[i,:]*delta_o[:])
+		h = np.sum(weights2[i,:]*delta_o[:])
 		delta_h[i] = beta*hidden_vect[i]*(1.0-hidden_vect[i])*h
 	
 	
