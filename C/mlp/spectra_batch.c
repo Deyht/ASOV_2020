@@ -1,4 +1,6 @@
 
+
+
 /* 
 Neural networks pedagogical materials
 The following code is free to use and modify to any extent (with no responsibility of the original author)
@@ -7,22 +9,39 @@ Reference to the author is a courtesy
 Author : David Cornu => david.cornu@utinam.cnrs.fr
 */
 
+
+
+
+/*
+#######################################################################################################################
+
+/!\ /!\                                         /!\ /!\ WARNING /!\ /!\                                         /!\ /!\
+
+Since there is no native matrix multiply operation in C, the following code make use of the OpenBLAS optimized library
+To use install OpenBLAS and uncomment the corresponding line in compile.cp
+
+#######################################################################################################################
+*/
+
+
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <tgmath.h>
 #include <time.h>
 
 
-#include "ext_module.h"
+#include "ext_module_blas.h"
 
 
 int main()
 {
-	int nb_train = 568, nb_test=50, in_dim = 8, hid_dim = 8, out_dim = 2, nb_epochs = 1500, control_interv=100;
-	float **input, **input_test, **targ, **targ_test, *hidden, *output, **weights1, **weights2;
-	float h, learn_rate = 0.05, rdm, mean, maxval, beta=1.0, quad_error;
+	int nb_train = 1015, nb_test=100, in_dim = 3753, hid_dim = 8, out_dim = 7, nb_epochs = 400, control_interv=5;
+	float **input, **input_test, **targ, **targ_test, **hidden, **hidden_test, **delta_h, **delta_h_test, **output, **output_test, **delta_o, **delta_o_test, **weights1, **weights2;
+	float h, learn_rate = 0.005, rdm, mean, maxval, beta=1.0, quad_error;
 	int i, j, t, ind, temp_class;
-	FILE *f = NULL;
+	FILE *f = NULL, *f2 = NULL;
 
 	srand(time(NULL));
 
@@ -30,9 +49,15 @@ int main()
 	input_test = create_2d_table(nb_test,in_dim+1);
 	targ = create_2d_table(nb_train, out_dim);
 	targ_test = create_2d_table(nb_test, out_dim);
-	hidden = (float*) calloc(hid_dim+1,sizeof(float));
-	output = (float*) calloc(out_dim,sizeof(float));
-	weights1 = create_2d_table(in_dim+1,hid_dim);
+	hidden = create_2d_table(nb_train, hid_dim+1);
+	delta_h = create_2d_table(nb_train, hid_dim+1);
+	hidden_test = create_2d_table(nb_test, hid_dim+1);
+	delta_h_test = create_2d_table(nb_test, hid_dim+1);
+	output =  create_2d_table(nb_train, out_dim);
+	delta_o = create_2d_table(nb_train, out_dim);
+	output_test =  create_2d_table(nb_test, out_dim);
+	delta_o_test = create_2d_table(nb_test, out_dim);
+	weights1 = create_2d_table(in_dim+1,hid_dim+1);
 	weights2 = create_2d_table(hid_dim+1,out_dim);
 
 	
@@ -40,8 +65,15 @@ int main()
 	//          Loading data and pre process
 	//######################## ##########################
 	
-	f = fopen("../../data/pima-indians-diabetes.data", "r+");
+	f = fopen("../../data/stellar_spectra/train.dat", "r+");
 	if(f == NULL)
+	{
+		printf("File not found\n");
+		exit(EXIT_FAILURE);
+	}
+	
+	f2 = fopen("../../data/stellar_spectra/target.dat", "r+");
+	if(f2 == NULL)
 	{
 		printf("File not found\n");
 		exit(EXIT_FAILURE);
@@ -57,49 +89,39 @@ int main()
 	{
 		for(j = 0; j < in_dim; j++)
 			fscanf(f, "%f ", &input[i][j]);
-		fscanf(f, "%d\n",  &temp_class);
 		input[i][in_dim] = -1.0;
-		targ[i][temp_class] = 1.0;
+		for(j = 0; j < out_dim; j++)
+			fscanf(f2, "%f ",  &targ[i][j]);
 	}
 	
 	for(i = 0; i < nb_test; i++)
 	{
 		for(j = 0; j < in_dim; j++)
 			fscanf(f, "%f ", &input_test[i][j]);
-		fscanf(f, "%d\n",  &temp_class);
 		input_test[i][in_dim] = -1.0;
-		targ_test[i][temp_class] = 1.0;
-	}
-	
-	for(i = 0; i < nb_train; i++)
-	{
-		if(input[i][0] > 8) input[i][0] = 8;
-		input[i][7] = ((int)(input[i][7]-30))%10;
-		if(input[i][7] > 5) input[i][7] = 5;
-	}
-	
-	for(i = 0; i < nb_test; i++)
-	{
-		if(input_test[i][0] > 8) input_test[i][0] = 8;
-		input_test[i][7] = ((int)(input_test[i][7]-30))%10;
-		if(input_test[i][7] > 5) input_test[i][7] = 5;
+		for(j = 0; j < out_dim; j++)
+			fscanf(f2, "%f ",  &targ_test[i][j]);
 	}
 	
 	fclose(f);
+	fclose(f2);
 
+	
 	for(i = 0; i < in_dim; i++)
 	{
-		mean = 0;
+		mean = 0.0;
 		for(j = 0; j < nb_train; j++)
 			mean += input[j][i];
 		for(j = 0; j < nb_test; j++)
 			mean += input_test[j][i];
+		
 		mean /= (nb_train+nb_test);
 		for(j = 0; j <  nb_train; j++)
 			input[j][i] -= mean;
 		for(j = 0; j <  nb_test; j++)
 			input_test[j][i] -= mean;
 		maxval = fabsf(input[0][i]);
+
 		for(j = 0; j < nb_train; j++)
 		{
 			if(abs(input[j][i] > maxval))
@@ -110,6 +132,7 @@ int main()
 			if(abs(input_test[j][i] > maxval))
 				maxval = fabsf(input_test[j][i]);
 		}
+
 		for(j = 0; j < nb_train; j++)
 			input[j][i] /= maxval;
 		for(j = 0; j < nb_test; j++)
@@ -124,8 +147,13 @@ int main()
 	//######################## ##########################
 
 	for(i = 0; i < in_dim+1; i++)
+	{
 		for(j = 0; j < hid_dim; j++)
 			weights1[i][j] = (rand()/(double)RAND_MAX)*(0.02)-0.01;
+		weights1[i][hid_dim] = 0.0;
+	}	
+	weights1[in_dim][hid_dim] = 1.0;
+	
 	for(i = 0; i < hid_dim+1; i++)
 		for(j = 0; j < out_dim; j++)
 			weights2[i][j] = (rand()/(double)RAND_MAX)*(0.02)-0.01;
@@ -138,11 +166,11 @@ int main()
 	
 	for(t = 0; t < nb_epochs; t++)
 	{
-		if (t%control_interv == 0 || t == 0)
+		if ((t+1)%control_interv == 0 || t == 0)
 		{
-			printf("\nIteration : %d\n", t);
+			printf("\nIteration : %d\n", t+1);
 		
-			confmat(input_test, in_dim, hid_dim, targ_test, out_dim, nb_test, weights1, weights2, beta);
+			confmat_batch(input_test, in_dim, hidden_test, hid_dim, output_test, targ_test, out_dim, nb_test, weights1, weights2, beta);
 		}
 
 		shuffle(input, in_dim+1, targ, out_dim, nb_train);
@@ -151,17 +179,15 @@ int main()
 		//######################## ##########################
 		//             Training on all data once
 		//######################## ##########################
-		for(i=0; i < nb_train; i++)
-		{
-			//Forward phase
-			forward(input[i], in_dim, hidden, hid_dim, output, out_dim, weights1, weights2, beta);
-			
-			//Back-propagation phase
-			backprop(input[i], in_dim, hidden, hid_dim, output, targ[i], out_dim, weights1, weights2, learn_rate, beta);
+		//Forward phase
+		forward_batch(input, in_dim, hidden, hid_dim, output, out_dim, nb_train, weights1, weights2, beta);
 		
+		//Back-propagation phase
+		backprop_batch(input, in_dim, hidden, delta_h, hid_dim, output, delta_o, targ, out_dim, nb_train, weights1, weights2, learn_rate, beta);
+	
+		for(i = 0; i < nb_train; i++)
 			for(j = 0; j < out_dim; j++) 
-				quad_error += (output[j] - targ[i][j])*(output[j] - targ[i][j]); 
-		}
+				quad_error += (output[i][j] - targ[i][j])*(output[i][j] - targ[i][j]); 
 		
 		if (t%control_interv == 0)
 			printf("Average training dataset quadratic error : %f \n", 0.5*quad_error/nb_train);

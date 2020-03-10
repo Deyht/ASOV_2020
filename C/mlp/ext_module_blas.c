@@ -9,9 +9,26 @@ Author : David Cornu => david.cornu@utinam.cnrs.fr
 */
 
 
+
+/*
+#######################################################################################################################
+
+/!\ /!\                                         /!\ /!\ WARNING /!\ /!\                                         /!\ /!\
+
+Since there is no native matrix multiply operation in C, the following code make use of the OpenBLAS optimized library
+To use install OpenBLAS and uncomment the corresponding line in compile.cp
+
+#######################################################################################################################
+*/
+
+
+
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <tgmath.h>
+#include <cblas.h>
 
 float **create_2d_table(int m, int n)
 {
@@ -54,7 +71,7 @@ int argmax(float *tab, int size)
 
 
 
-void forward(float *input, int in_dim, float* hidden, int hid_dim, float *output, int out_dim, float **weights1, float **weights2, float beta)
+void forward_batch(float **input, int in_dim, float** hidden, int hid_dim, float **output, int out_dim, int nb_dat, float **weights1, float **weights2, float beta)
 {
 //######################## ##########################
 //        One forward step with a logistic neuron
@@ -62,71 +79,66 @@ void forward(float *input, int in_dim, float* hidden, int hid_dim, float *output
 
 	float h;
 	int i,j;
-
-	for(i = 0; i < hid_dim; i++)
-	{
-		h = 0.0;
-		for(j = 0; j < in_dim + 1; j++)
-			h += weights1[j][i]*input[j];
-		hidden[i] = 1.0 / (1.0 + expf(-beta*h));
-	}
-	hidden[hid_dim] = -1.0;
-
-	for(i = 0; i < out_dim; i++)
-	{
-		h = 0.0;
-		for(j = 0; j < hid_dim + 1; j++)
-			h += weights2[j][i]*hidden[j];
-		output[i] = 1.0 / (1.0 + expf(-beta*h));
-	}
 	
+	
+	cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, nb_dat, hid_dim+1, in_dim+1, 1.0, *input, in_dim+1, *weights1, hid_dim+1, 0.0, *hidden, hid_dim+1);
+	
+	for(i = 0; i < nb_dat; i++)
+	{
+		for(j = 0; j < hid_dim; j++)
+			hidden[i][j] = 1.0/(1.0 + exp(-beta*hidden[i][j]));
+		hidden[i][hid_dim] = -1.0;
+	}	
+	
+	cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, nb_dat, out_dim, hid_dim+1, 1.0, *hidden, hid_dim+1, *weights2, out_dim, 0.0, *output, out_dim);
 
+
+	for(i = 0; i < nb_dat; i++)
+		for(j = 0; j < out_dim; j++)
+			output[i][j] = 1.0/(1.0 + exp(-beta*output[i][j]));
 }
 
 
-void backprop(float *input, int in_dim, float *hidden, int hid_dim, float *output, float *targ, int out_dim, float **weights1, float **weights2, float learn_rate, float beta)
+void backprop_batch(float **input, int in_dim, float **hidden, float **delta_h, int hid_dim, float **output, float **delta_o, float **targ, int out_dim, int nb_dat, float **weights1, float **weights2, float learn_rate, float beta)
 {
 //######################## ##########################
 //       One backward step with a logistic neuron
 //######################## ##########################
-	float delta_o[out_dim], delta_h[hid_dim+1];
 	
 	int i, j;
 	float h;
 	
-	for(i = 0; i < out_dim; i++)
-		delta_o[i] = beta*(output[i] - targ[i])* output[i] * (1.0 - output[i]);
-	
-	for(i = 0; i < hid_dim; i++)
-	{
-		h = 0.0;
+	for(i = 0; i < nb_dat; i++)
 		for(j = 0; j < out_dim; j++)
-			h += weights2[i][j]*delta_o[j];
-		delta_h[i] = beta*hidden[i]*(1.0 - hidden[i])*h;
-	}
+			delta_o[i][j] = beta*(output[i][j] - targ[i][j])* output[i][j] * (1.0 - output[i][j]);
 	
-	for(i=0; i < in_dim + 1; i++)
-		for(j=0 ; j < hid_dim; j++)
-			weights1[i][j] -= learn_rate*delta_h[j]*input[i];
-			
-	for(i=0; i < hid_dim + 1; i++)
-		for(j=0 ; j < out_dim; j++)
-			weights2[i][j] -= learn_rate*delta_o[j]*hidden[i];
+	
+	cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasTrans, nb_dat, hid_dim+1, out_dim, 1.0, *delta_o, out_dim, *weights2, out_dim, 0.0, *delta_h, hid_dim+1);
+	
+	for(i = 0; i < nb_dat; i++)
+	{
+		for(j = 0; j < hid_dim; j++)
+			delta_h[i][j] = beta*hidden[i][j]*(1.0-hidden[i][j])*delta_h[i][j] ;
+		delta_h[i][hid_dim] = 0.0;
+	}
+
+	
+	cblas_sgemm(CblasRowMajor, CblasTrans, CblasNoTrans, hid_dim+1, out_dim, nb_dat, -learn_rate, *hidden, hid_dim+1, *delta_o, out_dim, 1.0, *weights2, out_dim);
+	cblas_sgemm(CblasRowMajor, CblasTrans, CblasNoTrans, in_dim+1, hid_dim+1, nb_dat, -learn_rate, *input, in_dim+1, *delta_h, hid_dim+1, 1.0, *weights1, hid_dim+1);
+	
 }
 
 
-void confmat(float **input, int in_dim, int hid_dim, float **targ, int out_dim, int nb_data, float **weights1, float **weights2, float beta)
+void confmat_batch(float **input, int in_dim, float **hidden, int hid_dim, float **output, float **targ, int out_dim, int nb_data, float **weights1, float **weights2, float beta)
 {
 //######################## ##########################
 // Forward on an epoch and display a confusion matrix
 //######################## ##########################
 	
-	float output[out_dim];
 	int max_a, max_b;
 	int confmatrix[out_dim][out_dim];
 	float recall[out_dim], precis[out_dim];
 	float accu, quad_error;
-	float hidden[hid_dim+1];
 	
 	int i, j;
 	
@@ -135,13 +147,14 @@ void confmat(float **input, int in_dim, int hid_dim, float **targ, int out_dim, 
 		confmatrix[0][i] = 0.0;
 		
 	quad_error = 0.0;
+	
+	forward_batch(input, in_dim, hidden, hid_dim, output, out_dim, nb_data, weights1, weights2, beta);
+	
 	for(i=0; i < nb_data; i++)
 	{
-		forward(input[i], in_dim, hidden, hid_dim, output, out_dim, weights1, weights2, beta);
-		
 		for(j = 0; j < out_dim; j++) 
-			quad_error += (output[j] - targ[i][j])*(output[j] - targ[i][j]); 
-		max_a = argmax(output, out_dim);
+			quad_error += (output[i][j] - targ[i][j])*(output[i][j] - targ[i][j]); 
+		max_a = argmax(output[i], out_dim);
 		max_b = argmax(targ[i], out_dim);
 		confmatrix[max_b][max_a] += 1;
 		if(max_a == max_b)
