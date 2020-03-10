@@ -99,7 +99,7 @@ for t in range(0,nb_epochs):
 		#Back-propagation phase
 		backprop(input[i,:], hidden, output, targ[i,:], weights1, weights2, learn_rate, beta)
 
-		quad_error += 0.5*sum((output[:] - targ[i,:])**2)
+		quad_error += 0.5*np.sum((output[:] - targ[i,:])**2)
 	
 	if((t%control_interv) == 0):
 		print("\nAverage training dataset quadratic error :", quad_error/nb_dat)

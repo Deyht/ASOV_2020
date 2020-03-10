@@ -10,6 +10,9 @@
 
 
 import numpy as np
+#from numba import jit
+#uncoment numba lines to expect high speed up with on-line and sgd algorithms
+
 
 ######################### ########################## ##########################
 	
@@ -17,6 +20,7 @@ import numpy as np
 	
 ######################### ########################## ##########################
 
+#@jit(nopython=True, cache=True, fastmath=False)
 def forward(input_vect, hidden_vect, output_vect, weights1, weights2, beta):
 	######################### ##########################
 	#        One forward step with a binary neuron
@@ -27,17 +31,17 @@ def forward(input_vect, hidden_vect, output_vect, weights1, weights2, beta):
 	out_dim = np.shape(output_vect)[0]
 	
 	for i in range(0,hid_dim-1):
-		h = sum(weights1[:,i]*input_vect[:])
+		h = np.sum(weights1[:,i]*input_vect[:])
 		hidden_vect[i] = 1.0/(1.0 + np.exp(-beta*h))
 	hidden_vect[hid_dim-1] = -1.0
 		
 	for i in range(0,out_dim):
-		h = sum(weights2[:,i]*hidden_vect[:])
+		h = np.sum(weights2[:,i]*hidden_vect[:])
 		output_vect[i] = 1.0/(1.0 + np.exp(-beta*h))
 	
 	
 	
-	
+#@jit(nopython=True, cache=True, fastmath=False)
 def backprop(input_vect, hidden_vect, output_vect, targ_vect, weights1, weights2, learn_rate, beta):
 	######################### ##########################
 	#       One backward step with a binary neuron
@@ -51,7 +55,7 @@ def backprop(input_vect, hidden_vect, output_vect, targ_vect, weights1, weights2
 	delta_h = np.zeros(hid_dim-1)
 	
 	for i in range(hid_dim-1):
-		h = sum(weights2[i,:]*delta_o[:])
+		h = np.sum(weights2[i,:]*delta_o[:])
 		delta_h[i] = beta*hidden_vect[i]*(1.0-hidden_vect[i])*h
 	
 	
@@ -61,8 +65,6 @@ def backprop(input_vect, hidden_vect, output_vect, targ_vect, weights1, weights2
 	for i in range(0, hid_dim):
 		weights2[i,:] -= learn_rate*(delta_o[:]*hidden_vect[i])
 	
-
-
 
 
 def confmat(input, targ, weights1, weights2, beta):
@@ -86,7 +88,7 @@ def confmat(input, targ, weights1, weights2, beta):
 	
 		forward(input[i,:], hidden, output, weights1, weights2, beta)
 		
-		quad_error += 0.5*sum((output[:] - targ[i,:])**2)
+		quad_error += 0.5*np.sum((output[:] - targ[i,:])**2)
 		
 		max_a = np.argmax(output)
 		max_b = np.argmax(targ[i,:])
