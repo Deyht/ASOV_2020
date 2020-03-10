@@ -115,9 +115,6 @@ program multi_layer_perceptron
 		!No need to shufle in SGD
 		
 
-		!######################## ##########################
-		!             Training on all data once
-		!######################## ##########################
 		quad_error = 0.0
 		do i=1, nb_train
 

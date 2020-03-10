@@ -145,11 +145,10 @@ int main()
 		
 			confmat(input_test, in_dim, hid_dim, targ_test, out_dim, nb_test, weights1, weights2, beta);
 		}
+		
+		// no need to shuffle in SGD
 
 		quad_error = 0.0;
-		//######################## ##########################
-		//             Training on all data once
-		//######################## ##########################
 		for(i=0; i < nb_train; i++)
 		{
 			ind = (rand()/(double)RAND_MAX)*nb_train;

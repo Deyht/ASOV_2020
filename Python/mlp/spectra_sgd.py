@@ -77,14 +77,9 @@ for t in range(0,nb_iter):
 		print("\nIteration :", t)
 		confmat(input_test, targ_test, weights1, weights2, beta)
 
-	np.random.shuffle(index)
-	input = input[index,:]
-	targ = targ[index,:]
+	#no need to shuffle in SGD
 
 	quad_error = 0.0
-	######################### ##########################
-	#             Training on all data once
-	######################### ##########################
 	for i in range(0,nb_dat):
 		
 		i_d = int(np.random.rand(1)*nb_dat)
