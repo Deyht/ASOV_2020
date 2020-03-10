@@ -86,10 +86,10 @@ for t in range(0,nb_epochs):
 	######################### ##########################
 	for i in range(0,nb_dat):
 		#Forward phase
-		forward(input[i,:], hidden, output, weights1, weights2, beta)
+		forward(input[i,:], in_dim+1, hidden, hid_dim+1, output, out_dim, weights1, weights2, beta)
 		
 		#Back-propagation phase
-		backprop(input[i,:], hidden, output, targ[i,:], weights1, weights2, learn_rate, beta)
+		backprop(input[i,:], in_dim+1, hidden, hid_dim+1, output, targ[i,:], out_dim, weights1, weights2, learn_rate, beta)
 
 		quad_error += 0.5*sum((output[:] - targ[i,:])**2)
 	

@@ -17,7 +17,7 @@ from ext_module import *
 nb_iter = 100
 control_interv = 1
 hid_dim = 8
-learn_rate = 0.2
+learn_rate = 0.1
 out_dim = 7
 beta = 1.0
 
@@ -86,10 +86,10 @@ for t in range(0,nb_iter):
 		
 		
 		#Forward phase
-		forward(input[i_d,:], hidden, output, weights1, weights2, beta)
+		forward(input[i_d,:], in_dim+1, hidden, hid_dim+1, output, out_dim, weights1, weights2, beta)
 		
 		#Back-propagation phase
-		backprop(input[i_d,:], hidden, output, targ[i_d,:], weights1, weights2, learn_rate, beta)
+		backprop(input[i_d,:], in_dim+1, hidden, hid_dim+1, output, targ[i_d,:], out_dim, weights1, weights2, learn_rate, beta)
 
 		quad_error += 0.5*sum((output[:] - targ[i_d,:])**2)
 	

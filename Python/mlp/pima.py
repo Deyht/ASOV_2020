@@ -15,7 +15,7 @@ from ext_module import *
 
 nb_epochs = 1500
 control_interv = 10
-hid_dim = 12
+hid_dim = 8
 learn_rate = 0.05
 out_dim = 2
 beta = 1.0
@@ -33,7 +33,7 @@ raw_data = np.loadtxt("../../data/pima-indians-diabetes.data")
 nb_dat = np.shape(raw_data)[0]
 in_dim = np.shape(raw_data)[1] - 1
 
-input = np.append(raw_data[:,:in_dim], -0.5*np.ones((nb_dat,1)), axis=1)
+input = np.append(raw_data[:,:in_dim], -1.0*np.ones((nb_dat,1)), axis=1)
 output = np.zeros(out_dim)
 hidden = np.zeros(hid_dim+1)
 
@@ -94,10 +94,10 @@ for t in range(0,nb_epochs):
 	quad_error = 0.0
 	for i in range(0,nb_dat):
 		#Forward phase
-		forward(input[i,:], hidden, output, weights1, weights2, beta)
+		forward(input[i,:], in_dim+1, hidden, hid_dim+1, output, out_dim, weights1, weights2, beta)
 		
 		#Back-propagation phase
-		backprop(input[i,:], hidden, output, targ[i,:], weights1, weights2, learn_rate, beta)
+		backprop(input[i,:], in_dim+1, hidden, hid_dim+1, output, targ[i,:], out_dim, weights1, weights2, learn_rate, beta)
 
 		quad_error += 0.5*np.sum((output[:] - targ[i,:])**2)
 	

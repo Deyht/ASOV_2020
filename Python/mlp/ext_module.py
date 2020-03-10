@@ -16,19 +16,16 @@ import numpy as np
 
 ######################### ########################## ##########################
 	
-#    						 ON-LINE FUNCTIONS
+#                             ON-LINE FUNCTIONS
 	
 ######################### ########################## ##########################
 
 #@jit(nopython=True, cache=True, fastmath=False)
-def forward(input_vect, hidden_vect, output_vect, weights1, weights2, beta):
+def forward(input_vect, in_dim, hidden_vect, hid_dim, output_vect, out_dim, weights1, weights2, beta):
 	######################### ##########################
 	#        One forward step with a binary neuron
 	######################### ##########################
 	
-	in_dim = np.shape(input_vect)[0]
-	hid_dim = np.shape(hidden_vect)[0]
-	out_dim = np.shape(output_vect)[0]
 	
 	for i in range(0,hid_dim-1):
 		h = np.sum(weights1[:,i]*input_vect[:])
@@ -42,14 +39,11 @@ def forward(input_vect, hidden_vect, output_vect, weights1, weights2, beta):
 	
 	
 #@jit(nopython=True, cache=True, fastmath=False)
-def backprop(input_vect, hidden_vect, output_vect, targ_vect, weights1, weights2, learn_rate, beta):
+def backprop(input_vect, in_dim, hidden_vect, hid_dim, output_vect, targ_vect, out_dim, weights1, weights2, learn_rate, beta):
 	######################### ##########################
 	#       One backward step with a binary neuron
 	######################### ##########################
 	
-	in_dim = np.shape(input_vect)[0]
-	hid_dim = np.shape(hidden_vect)[0]
-	out_dim = np.shape(output_vect)[0]
 	
 	delta_o = beta*(output_vect[:] - targ_vect[:])*output_vect[:]*(1.0 - output_vect[:])
 	delta_h = np.zeros(hid_dim-1)
@@ -86,7 +80,7 @@ def confmat(input, targ, weights1, weights2, beta):
 	quad_error = 0.0
 	for i in range(0, nb_data):
 	
-		forward(input[i,:], hidden, output, weights1, weights2, beta)
+		forward(input[i,:], in_dim, hidden, hid_dim, output, out_dim, weights1, weights2, beta)
 		
 		quad_error += 0.5*np.sum((output[:] - targ[i,:])**2)
 		
@@ -131,7 +125,7 @@ def confmat(input, targ, weights1, weights2, beta):
 	
 ######################### ########################## ##########################
 	
-
+	
 def forward_batch(input, hidden, output, weights1, weights2, beta):
 	######################### ##########################
 	#        One forward step with a binary neuron
@@ -144,8 +138,8 @@ def forward_batch(input, hidden, output, weights1, weights2, beta):
 	output[:,:] = np.matmul(hidden, weights2)
 		
 	output[:,:] = 1.0/(1.0 + np.exp(-beta*output[:,:]))
-
 	
+
 def backprop_batch(input, hidden, delta_h, output, delta_o, targ, weights1, weights2, learn_rate, beta):
 	######################### ##########################
 	#       One backward step with a binary neuron
@@ -157,7 +151,6 @@ def backprop_batch(input, hidden, delta_h, output, delta_o, targ, weights1, weig
 
 	delta_h[:,:-1] = beta*hidden[:,:-1]*(1.0-hidden[:,:-1])*delta_h[:,:-1] 
 	delta_h[:,-1] = 0.0
-	
 	
 
 	weights2[:,:] -= learn_rate*np.matmul(np.transpose(hidden),delta_o)
