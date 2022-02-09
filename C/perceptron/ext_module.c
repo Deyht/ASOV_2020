@@ -67,7 +67,7 @@ void forward(float *input, int in_dim, float *output, int out_dim, float **weigh
 	for( i=0; i < out_dim; i++)
 	{
 		h = 0.0;
-		for( j=0; j < in_dim + 1; j++)
+		for(j = 0; j < in_dim + 1; j++)
 			h += weights[j][i]*input[j];
 		
 		if(h > 0)
@@ -87,8 +87,8 @@ void backprop(float *input, int in_dim, float *output, float *targ, int out_dim,
 	
 	int i, j;
 	
-	for(i=0; i < in_dim + 1; i++)
-		for(j=0 ; j < out_dim; j++)
+	for(i = 0; i < in_dim + 1; i++)
+		for(j = 0 ; j < out_dim; j++)
 			weights[i][j] -= learn_rate*(output[j]-targ[j])*input[i];
 
 }
@@ -112,10 +112,9 @@ void confmat(float **input, int in_dim, float **targ, int out_dim, int nb_data, 
 	for(i = 0; i < out_dim*out_dim; i++)
 		confmatrix[0][i] = 0.0;
 		
-	for(i=0; i < nb_data; i++)
+	for(i = 0; i < nb_data; i++)
 	{
-		for(j = 0; j < nb_data; j++)
-			forward(input[i], in_dim, output, out_dim, weights);
+		forward(input[i], in_dim, output, out_dim, weights);
 		
 		max_a = argmax(output, out_dim);
 		max_b = argmax(targ[i], out_dim);
@@ -124,7 +123,7 @@ void confmat(float **input, int in_dim, float **targ, int out_dim, int nb_data, 
 			accu = accu + 1;
 	}
 	
-	for(i=0; i < out_dim; i++)
+	for(i = 0; i < out_dim; i++)
 	{
 		recall[i] = 0;
 		precis[i] = 0;
@@ -143,16 +142,16 @@ void confmat(float **input, int in_dim, float **targ, int out_dim, int nb_data, 
 		
 	printf("*****************************************************************\n");
 	printf("Confmat :                                           Recall\n");
-	for(i=0; i < out_dim; i++)
+	for(i = 0; i < out_dim; i++)
 	{
 		printf("         ");
-		for(j=0; j < out_dim; j++)
+		for(j = 0; j < out_dim; j++)
 			printf("%10d", confmatrix[i][j]);
 		
 		printf("        %6.2f\n", recall[i]);
 	}	
 	printf("\n  Precision");
-	for(i=0; i < out_dim; i++)
+	for(i = 0; i < out_dim; i++)
 		printf("%10.2f", precis[i]);
 
 	printf(" Accu  %6.2f" , ((float)accu/(float)nb_data)*100.0);
@@ -171,7 +170,7 @@ void shuffle(float** input, int in_dim, float** targ, int out_dim, int nb_data)
 	int i, j, ind;
 	float temp;
 	
-	for(i=0; i < nb_data-1 ; i++)
+	for(i = 0; i < nb_data-1 ; i++)
 	{	
 		
 		ind = (int)(((double)rand()/(double)RAND_MAX) * (nb_data-i)) + i;

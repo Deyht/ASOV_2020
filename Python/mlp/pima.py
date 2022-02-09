@@ -13,7 +13,7 @@ import numpy as np
 from ext_module import *
 
 
-nb_epochs = 1500
+nb_epochs = 1000
 control_interv = 10
 hid_dim = 8
 learn_rate = 0.05
@@ -42,9 +42,11 @@ for i in range(0,nb_dat):
 	targ[i,int(raw_data[i,in_dim])] = 1.0
 	
 	
-i_d = np.where(input[:,0] > 6)
-input[i_d,0] = 6
+i_d = np.where(input[:,0] > 8)
+input[i_d,0] = 8
 input[:,7] = (input[:,7]-30)%10
+i_d = np.where(input[:,7] < 0)
+input[i_d,7] = 0
 i_d = np.where(input[:,7] > 5)
 input[i_d,7] = 5
 

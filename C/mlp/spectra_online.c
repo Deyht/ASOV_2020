@@ -21,7 +21,7 @@ Author : David Cornu => david.cornu@utinam.cnrs.fr
 
 int main()
 {
-	int nb_train = 1015, nb_test=100, in_dim = 3753, hid_dim = 8, out_dim = 7, nb_epochs = 100, control_interv=10;
+	int nb_train = 915, nb_test=200, in_dim = 3753, hid_dim = 8, out_dim = 7, nb_epochs = 100, control_interv=10;
 	float **input, **input_test, **targ, **targ_test, *hidden, *output, **weights1, **weights2;
 	float h, learn_rate = 0.1, rdm, mean, maxval, beta=1.0, quad_error;
 	int i, j, t, ind, temp_class;

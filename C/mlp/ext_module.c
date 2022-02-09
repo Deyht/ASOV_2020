@@ -105,12 +105,12 @@ void backprop(float *input, int in_dim, float *hidden, int hid_dim, float *outpu
 		delta_h[i] = beta*hidden[i]*(1.0 - hidden[i])*h;
 	}
 	
-	for(i=0; i < in_dim + 1; i++)
-		for(j=0 ; j < hid_dim; j++)
+	for(i = 0; i < in_dim + 1; i++)
+		for(j = 0 ; j < hid_dim; j++)
 			weights1[i][j] -= learn_rate*delta_h[j]*input[i];
 			
-	for(i=0; i < hid_dim + 1; i++)
-		for(j=0 ; j < out_dim; j++)
+	for(i = 0; i < hid_dim + 1; i++)
+		for(j = 0 ; j < out_dim; j++)
 			weights2[i][j] -= learn_rate*delta_o[j]*hidden[i];
 }
 
@@ -135,7 +135,7 @@ void confmat(float **input, int in_dim, int hid_dim, float **targ, int out_dim, 
 		confmatrix[0][i] = 0.0;
 		
 	quad_error = 0.0;
-	for(i=0; i < nb_data; i++)
+	for(i = 0; i < nb_data; i++)
 	{
 		forward(input[i], in_dim, hidden, hid_dim, output, out_dim, weights1, weights2, beta);
 		
@@ -148,7 +148,7 @@ void confmat(float **input, int in_dim, int hid_dim, float **targ, int out_dim, 
 			accu = accu + 1;
 	}
 	
-	for(i=0; i < out_dim; i++)
+	for(i = 0; i < out_dim; i++)
 	{
 		recall[i] = 0;
 		precis[i] = 0;
@@ -167,10 +167,10 @@ void confmat(float **input, int in_dim, int hid_dim, float **targ, int out_dim, 
 		
 	printf("*****************************************************************\n");
 	printf("Confmat :                                           Recall\n");
-	for(i=0; i < out_dim; i++)
+	for(i = 0; i < out_dim; i++)
 	{
 		printf("         ");
-		for(j=0; j < out_dim; j++)
+		for(j = 0; j < out_dim; j++)
 			printf("%10d", confmatrix[i][j]);
 		
 		printf("        %6.2f\n", recall[i]);

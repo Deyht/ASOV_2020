@@ -37,7 +37,7 @@ To use install OpenBLAS and uncomment the corresponding line in compile.cp
 
 int main()
 {
-	int nb_train = 1015, nb_test=100, in_dim = 3753, hid_dim = 8, out_dim = 7, nb_epochs = 400, control_interv=5;
+	int nb_train = 915, nb_test=200, in_dim = 3753, hid_dim = 8, out_dim = 7, nb_epochs = 400, control_interv=5;
 	float **input, **input_test, **targ, **targ_test, **hidden, **hidden_test, **delta_h, **delta_h_test, **output, **output_test, **delta_o, **delta_o_test, **weights1, **weights2;
 	float h, learn_rate = 0.005, rdm, mean, maxval, beta=1.0, quad_error;
 	int i, j, t, ind, temp_class;
